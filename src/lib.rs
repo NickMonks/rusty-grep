@@ -30,16 +30,28 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &str> {
+    /*  Because we're mutating args by taking the ownership, we define as mutable
+        We also update the return value to 'static, since before we could reference
+        the lifetime of the slice to an argument (lifetime elision), but not anymore
+    */  
+    pub fn new(mut args: env::Args) -> Result<Config, &'static str> {
         
         if args.len() < 3 {
             return Err("not enough arguments!");
         }
         
-        // perform deep copy of args immutable ref
-        // so Config has owned values. Not performant
-        let query = args[1].clone();
-        let filename = args[2].clone();
+        args.next(); // Ignore first value, is the name of the program
+        
+        // Use the match pattern to take the value of some(arg) to just extract arg
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string =( "),
+        };
+
+        let filename = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string =( "),
+        };
         
         // If case insensitive exists, is_err will return false (is a Result)
         // otherwise it will give an error and is_err sets to true
